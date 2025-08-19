@@ -16,6 +16,10 @@ class Passcard(models.Model):
 
 
 class Visit(models.Model):
+    SECONDS_IN_MINUTE = 60
+    SECONDS_IN_HOUR = 3600
+    SUSPICIOUS_VISIT_DURATION_MINUTES = 60
+
     created_at = models.DateTimeField(auto_now=True)
     passcard = models.ForeignKey(Passcard, on_delete=models.CASCADE)
     entered_at = models.DateTimeField()
@@ -36,14 +40,14 @@ class Visit(models.Model):
             return localtime(self.leaved_at) - localtime(self.entered_at)
         return localtime(now()) - localtime(self.entered_at)
 
-    def is_visit_long(self, minutes=60):
+    def is_visit_long(self, minutes=SUSPICIOUS_VISIT_DURATION_MINUTES):
         duration = self.get_duration()
-        return duration.total_seconds() > minutes * 60
+        return duration.total_seconds() > minutes * self.SECONDS_IN_MINUTE
 
     def format_duration(self):
         duration = self.get_duration()
         total_seconds = int(duration.total_seconds())
-        hours = total_seconds // 3600
-        minutes = (total_seconds % 3600) // 60
-        seconds = total_seconds % 60
+        hours = total_seconds // self.SECONDS_IN_HOUR
+        minutes = (total_seconds % self.SECONDS_IN_HOUR) // self.SECONDS_IN_MINUTE
+        seconds = total_seconds % self.SECONDS_IN_MINUTE
         return f"{hours}:{minutes:02d}:{seconds:02d}"
